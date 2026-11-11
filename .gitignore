@@ -1,0 +1,7 @@
+# Source material from the listing (broker prospect + photos): third-party, not ours to publish
+Material/
+
+# Blender backups / Python cache / local tooling
+*.blend1
+__pycache__/
+.claude/

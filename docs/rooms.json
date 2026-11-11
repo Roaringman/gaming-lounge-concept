@@ -1,0 +1,79 @@
+{
+ "rooms": [
+  {
+   "name": "Konditori",
+   "w": 5.05,
+   "d": 4.13,
+   "area": 20.9
+  },
+  {
+   "name": "Trappe",
+   "w": 2.11,
+   "d": 2.58,
+   "area": 5.4
+  },
+  {
+   "name": "Fyrrum",
+   "w": 1.86,
+   "d": 2.84,
+   "area": 5.3
+  },
+  {
+   "name": "Gang",
+   "w": 4.04,
+   "d": 3.13,
+   "area": 9.5
+  },
+  {
+   "name": "Bageriovn",
+   "w": 4.32,
+   "d": 4.13,
+   "area": 17.4
+  },
+  {
+   "name": "Gang",
+   "w": 5.26,
+   "d": 3.65,
+   "area": 18.9
+  },
+  {
+   "name": "Bageri",
+   "w": 8.11,
+   "d": 4.0,
+   "area": 32.4
+  },
+  {
+   "name": "Kontor",
+   "w": 2.46,
+   "d": 3.94,
+   "area": 9.7
+  },
+  {
+   "name": "Trappe",
+   "w": 2.35,
+   "d": 1.61,
+   "area": 3.8
+  },
+  {
+   "name": "Bad",
+   "w": 1.58,
+   "d": 1.61,
+   "area": 2.5
+  },
+  {
+   "name": "Bagerbutik",
+   "w": 4.35,
+   "d": 6.68,
+   "area": 28.6
+  }
+ ],
+ "stations": {
+  "A": 16,
+  "B": 16
+ },
+ "desk_cm": [
+  120,
+  75
+ ],
+ "ceiling_m": 3.0
+}
