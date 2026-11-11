@@ -1,7 +1,8 @@
 # Gaming lounge concept
 
-Rough 3D model of the former bakery (ground floor, ~154 m²) with two
-gaming-station layouts, plus a browser viewer that can be hosted on GitHub Pages.
+Rough 3D model of the former bakery (ground floor, ~154 m²) with three
+gaming-station layouts (A: pods, B: window row + lounge, C: maximum capacity with
+wall rows), plus a browser viewer that can be hosted on GitHub Pages.
 
 ## Files
 
@@ -19,7 +20,7 @@ gaming-station layouts, plus a browser viewer that can be hosted on GitHub Pages
 ```
 
 Every exported object carries a glTF extra `grp` (`building`, `roof`, `labels`, `layoutA`,
-`layoutB`, `shop`, `measRooms`, `measA`, `measB`, `measShop`, `removedWall`) that the viewer
+`layoutB`, `layoutC`, `shop`, `measRooms`, `measA`, `measB`, `measC`, `measShop`, `removedWall`) that the viewer
 uses for its toggles.
 
 ## Run the viewer locally
@@ -43,7 +44,7 @@ npx http-server docs -p 8765
 
 ## Viewer controls
 
-- **Layout A / B** switch, toggles for measurements, room names, check-in & bar, roof and the
+- **Layout A / B / C** switch, toggles for measurements, room names, check-in & bar, roof and the
   removed Bageri/Kontor wall.
 - Preset views (Overview, Plan, rooms, Lounge, Check-in & bar, Street).
 - Rotate: left-drag · Pan: right-drag, Shift+drag, two fingers or arrow keys · Zoom: wheel / pinch.

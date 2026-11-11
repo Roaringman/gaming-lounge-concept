@@ -411,6 +411,55 @@ def add_layout_b():
     return idx - 1
 
 
+# Layout C: maximise stations. Same 120 x 75 cm desks, all against walls, players facing the
+# wall. ~0.75 m chair space behind every desk; doorways and the routes between them kept clear.
+# Rows: (room, first desk centre (x, y), step (dx, dy), count, facing deg, label)
+#   facing: 0 = player looks north, 180 = south, 90 = west, -90 = east
+C_ROWS = [
+    # Konditori 4.8 x 3.7 m: north + south wall rows, one desk on the west wall
+    ("Konditori", (1.75, 7.93 - DESK_D / 2), (DESK_W, 0), 3, 0, "north wall"),
+    ("Konditori", (1.75, 4.20 + DESK_D / 2), (DESK_W, 0), 3, 180, "south wall"),
+    ("Konditori", (0.20 + DESK_D / 2, 6.07), (0, DESK_W), 1, 90, "west wall"),
+    # Bageriovn + former Fyrrum: one long row on the north wall, one desk east of the doorway
+    ("Bageriovn", (7.90, 7.83 - DESK_D / 2), (DESK_W, 0), 4, 0, "north wall"),
+    ("Bageriovn", (12.65, 4.06 + DESK_D / 2), (DESK_W, 0), 1, 180, "south wall"),
+    # Bageri + Kontor: the facade row (as in layout B) + west wall + two on the north walls
+    ("Bageri", (B_ROW_X0 + DESK_W / 2, B_ROW_Y), (DESK_W + B_ROW_GAP, 0), B_ROW_N, 180, "window row"),
+    ("Bageri", (8.24 + DESK_D / 2, 2.50), (0, DESK_W), 1, 90, "west wall"),
+    ("Bageri", (12.65, 3.94 - DESK_D / 2), (DESK_W, 0), 1, 0, "oven-room wall"),
+    ("Bageri", (17.89, 3.94 - DESK_D / 2), (DESK_W, 0), 1, 0, "Kontor wall"),
+]
+
+
+def add_layout_c():
+    top = coll("Gaming_Stations_LayoutC")
+    mats = gs_mats()
+    idx = 1
+    rooms = {}
+    for room, (x, y), (dx, dy), n, facing, _ in C_ROWS:
+        rc = rooms.get(room) or rooms.setdefault(room, coll(f"GSC_{room}", top))
+        for k in range(n):
+            build_station(idx, (x + k * dx, y + k * dy, 0), facing, rc, mats, prefix="C_")
+            idx += 1
+        # low felt side screens between neighbouring desks in a row (privacy, acoustics)
+        if n > 1:
+            bm = bmesh.new()
+            L = math.hypot(dx, dy)
+            ux, uy = dx / L, dy / L
+            nx, ny = -uy, ux                      # across the desk (wall <-> chair)
+            sgn = 1 if facing in (0, -90) else -1  # towards the wall
+            for k in range(1, n):
+                cx = x + (k - 0.5) * dx
+                cy = y + (k - 0.5) * dy
+                # screen spans the back 0.6 m of the desk depth
+                off = sgn * 0.075
+                p0 = Vector((cx + nx * (off - 0.30), cy + ny * (off - 0.30), 0))
+                p1 = Vector((cx + nx * (off + 0.30), cy + ny * (off + 0.30), 0))
+                add_box(bm, p0, p1, 0.025, DESK_H, DESK_H + 0.35)
+            obj_from_bm(bm, f"C_GS_{room}_{facing}_Screens", rc, mats["felt"])
+    return idx - 1
+
+
 # ------------------------------------------------------------------ shop: check-in + tap bar
 # Inspired by the current Bagerbutik setup (interior_store*.jpg): one long counter island
 # running north-south through the shop with an angled end at the front holding the POS.
@@ -628,6 +677,28 @@ def add_measurements():
              (LNG_SOFA_X + LNG_SOFA_D / 2 + 0.2, LNG_CY, 0.015), math.radians(90), 0.11, c_b, m_dim)
     obj_from_bm(bm, "B_Dim_Lines", c_b, m_dim)
 
+    # ---- Layout C labels: desk sizes, row lengths, the tightest aisles
+    c_c = coll("M_Desks_LayoutC", top)
+    for ob in [o for o in bpy.data.objects if o.name.startswith("C_Station_")]:
+        text_obj(f"Dim_{ob.name}", f"{DESK_W * 100:.0f} × {DESK_D * 100:.0f} cm",
+                 (0, -DESK_D / 2 + 0.06, DESK_H + 0.002), 0, 0.06, c_c, m_dim, parent=ob)
+    bm = bmesh.new()
+    for i, (room, (x, y), (dx, dy), n, facing, name) in enumerate(C_ROWS):
+        if n < 2 or dy != 0:
+            continue
+        sgn = -1 if facing == 0 else 1                 # chair side
+        yl = y + sgn * (DESK_D / 2 + CHAIR_ZONE + 0.12)
+        xa, xb = x - DESK_W / 2, x + (n - 1) * dx + DESK_W / 2
+        dim_line(bm, Vector((xa, yl, 0)), Vector((xb, yl, 0)), tick=0.12)
+        text_obj(f"C_Dim_Row_{i}", f"{name}: {n} desks, {xb - xa:.1f} m",
+                 ((xa + xb) / 2, yl + sgn * 0.13, 0.015), 0, 0.11, c_c, m_dim)
+    # aisles between back-to-back chair zones
+    for nm, x, ya, yb in (("Konditori aisle", 3.0, 4.20 + DESK_D + CHAIR_ZONE, 7.93 - DESK_D - CHAIR_ZONE),
+                          ("Bageri aisle", 15.0, B_ROW_Y + DESK_D / 2 + CHAIR_ZONE, 3.94 - DESK_D - CHAIR_ZONE)):
+        dim_line(bm, Vector((x, ya, 0)), Vector((x, yb, 0)), tick=0.12)
+        text_obj(f"C_Dim_{nm}", f"{nm} {yb - ya:.2f} m", (x + 0.75, (ya + yb) / 2, 0.015), 0, 0.10, c_c, m_dim)
+    obj_from_bm(bm, "C_Dim_Lines", c_c, m_dim)
+
     # ---- Shop: check-in + bar
     c_s = coll("M_Shop", top)
     bm = bmesh.new()
@@ -657,10 +728,20 @@ def layer_coll(name, lc=None):
 
 
 def show_layout(which):
-    """Tick/untick the collection checkboxes: 'A' (pods) or 'B' (window row + lounge)."""
+    """Tick/untick the collection checkboxes: 'A' (pods), 'B' (window row + lounge), 'C' (max, wall rows)."""
     for name, layout in (("Gaming_Stations", "A"), ("M_Desks", "A"),
-                         ("Gaming_Stations_LayoutB", "B"), ("M_Desks_LayoutB", "B")):
-        layer_coll(name).exclude = (layout != which)
+                         ("Gaming_Stations_LayoutB", "B"), ("M_Desks_LayoutB", "B"),
+                         ("Gaming_Stations_LayoutC", "C"), ("M_Desks_LayoutC", "C")):
+        include(layer_coll(name), layout == which)
+
+
+def include(lc, on):
+    """Exclude a collection, or include it together with all its sub-collections (Blender can
+    leave children excluded when only the parent is re-included)."""
+    lc.exclude = not on
+    if on:
+        for ch in lc.children:
+            include(ch, True)
 
 
 # ------------------------------------------------------------------ main
@@ -736,6 +817,7 @@ def main():
 
     add_gaming_stations()
     add_layout_b()
+    add_layout_c()
     add_shop()
     add_measurements()
 
@@ -827,7 +909,13 @@ if __name__ == "__main__":
            hide_roof=True, hide_labels=True)
     render(os.path.join(out, "10_shop_from_north.png"), (20.6, 10.0, 7.0), (20.9, 2.6, 0.6),
            hide_roof=True, hide_labels=True)
-    show_layout("A")   # file opens with Layout A ticked; tick Gaming_Stations_LayoutB to switch
+    show_layout("C")
+    render(os.path.join(out, "11_layoutC_plan.png"), (cx, cy, 40), (cx, cy, 0), ortho=25, hide_roof=True)
+    render(os.path.join(out, "12_layoutC_bageri.png"), (13.4, 9.0, 11.5), (13.4, 2.6, 0.3),
+           hide_roof=True, hide_labels=True)
+    render(os.path.join(out, "13_layoutC_konditori_ovn.png"), (6.0, 1.0, 11.0), (6.5, 6.2, 0.3),
+           hide_roof=True, hide_labels=True)
+    show_layout("A")   # file opens with Layout A ticked; tick another layout's collections to switch
     # leave the roof visible in the saved file
     bpy.data.collections["Roof"].hide_render = False
     bpy.ops.wm.save_as_mainfile(filepath=os.path.join(HERE, "Bakery_Model.blend"))

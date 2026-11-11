@@ -9,6 +9,7 @@ const B = (x, y, z) => new THREE.Vector3(x, z, -y);
 const NOTES = {
   A: "Pods everywhere: 4 in the Konditori, 4 in Bageriovn, 8 in Bageri + Kontor. Daylight from the side.",
   B: "8 desks in one row facing the Bageri windows, console lounge with sofa + 65\" TV in the Gang by the shop.",
+  C: "Maximum capacity: 23 desks, all against the walls (7 Konditori, 5 Bageriovn, 11 Bageri + Kontor). Aisles behind the chairs ~0.75 m.",
 };
 
 // Camera presets (Blender coordinates: camera position, target)
@@ -122,27 +123,29 @@ new GLTFLoader().load(
 
 function show(grp, on) { (groups[grp] || []).forEach((o) => { o.visible = on; }); }
 
+const LAYOUTS = ["A", "B", "C"];
+
 function applyState() {
-  const A = state.layout === "A";
   show("building", true);
   show("roof", state.roof);
   show("labels", state.labels);
-  show("layoutA", A);
-  show("layoutB", !A);
   show("shop", state.shop);
   show("measRooms", state.meas);
-  show("measA", state.meas && A);
-  show("measB", state.meas && !A);
   show("measShop", state.meas && state.shop);
   show("removedWall", state.wall);
-  document.getElementById("layA").setAttribute("aria-pressed", String(A));
-  document.getElementById("layB").setAttribute("aria-pressed", String(!A));
+  for (const L of LAYOUTS) {
+    const on = state.layout === L;
+    show(`layout${L}`, on);
+    show(`meas${L}`, state.meas && on);
+    document.getElementById(`lay${L}`).setAttribute("aria-pressed", String(on));
+  }
   document.getElementById("layoutNote").textContent = NOTES[state.layout];
 }
 
 // ---------------------------------------------------------------- UI wiring
-document.getElementById("layA").onclick = () => { state.layout = "A"; applyState(); };
-document.getElementById("layB").onclick = () => { state.layout = "B"; applyState(); };
+for (const L of LAYOUTS) {
+  document.getElementById(`lay${L}`).onclick = () => { state.layout = L; applyState(); };
+}
 for (const [id, key] of [["tMeas", "meas"], ["tLabels", "labels"], ["tShop", "shop"], ["tRoof", "roof"], ["tWall", "wall"]]) {
   const el = document.getElementById(id);
   el.checked = state[key];
@@ -210,7 +213,8 @@ fetch("./rooms.json").then((r) => r.json()).then((data) => {
   document.querySelector("#rooms tfoot").innerHTML =
     `<tr><td>Total</td><td class="n">ceiling ${data.ceiling_m} m</td><td class="n">${total.toFixed(0)} m²</td></tr>` +
     `<tr><td colspan="3" style="font-weight:400;color:var(--muted);padding-top:6px">` +
-    `${data.stations.A} stations per layout · desks ${data.desk_cm[0]} × ${data.desk_cm[1]} cm · sizes are estimates</td></tr>`;
+    `Stations: A ${data.stations.A} · B ${data.stations.B} · C ${data.stations.C ?? "–"} · desks ` +
+    `${data.desk_cm[0]} × ${data.desk_cm[1]} cm · sizes are estimates</td></tr>`;
 }).catch(() => {});
 
 // ---------------------------------------------------------------- measure tool

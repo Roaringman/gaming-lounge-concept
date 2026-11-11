@@ -4,8 +4,8 @@ Run:  blender -b --python export_web.py
 Writes docs/model.glb and docs/rooms.json.
 
 Every exported object gets a glTF extra  {"grp": <group>}  so the viewer can toggle:
-  building, roof, labels, layoutA, layoutB, shop,
-  measRooms, measA, measB, measShop, removedWall
+  building, roof, labels, layoutA, layoutB, layoutC, shop,
+  measRooms, measA, measB, measC, measShop, removedWall
 Text objects are converted to meshes (glTF has no text type).
 """
 import bpy, os, sys, json
@@ -23,11 +23,13 @@ COLL_TAG = {
     "Room_Labels": "labels",
     "Gaming_Stations": "layoutA",
     "Gaming_Stations_LayoutB": "layoutB",
+    "Gaming_Stations_LayoutC": "layoutC",
     "Shop_CheckIn_Bar": "shop",
     "Measurements": "measRooms",
     "M_Rooms": "measRooms",
     "M_Desks": "measA",
     "M_Desks_LayoutB": "measB",
+    "M_Desks_LayoutC": "measC",
     "M_Shop": "measShop",
 }
 
@@ -103,7 +105,8 @@ def main():
         export_yup=True, use_visible=False, export_apply=True, export_lights=False,
         export_cameras=False)
     stations = {"A": len([o for o in bpy.data.objects if o.name.startswith("Station_")]),
-                "B": len([o for o in bpy.data.objects if o.name.startswith("B_Station_")])}
+                "B": len([o for o in bpy.data.objects if o.name.startswith("B_Station_")]),
+                "C": len([o for o in bpy.data.objects if o.name.startswith("C_Station_")])}
     with open(os.path.join(OUT, "rooms.json"), "w", encoding="utf-8") as f:
         json.dump({"rooms": rooms_json(), "stations": stations,
                    "desk_cm": [round(bb.DESK_W * 100), round(bb.DESK_D * 100)],
